@@ -1,0 +1,67 @@
+services:
+  database:
+    # here, We didn’t expose the database port.
+    # because we’re not accessing it from the host machine.
+    # Containers communicate over Docker’s internal network,
+    # and our web container can conect & use databse via docker network. (see .env connection string)
+    # since, we are not accessing database from out host pc then why we need to expose post to host.
+    image: postgres:17
+    container_name: project_management_postgres
+    environment:
+      POSTGRES_DB: project_management_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data  # persistent DB storage
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: project_management_web
+    command: python manage.py runserver 0.0.0.0:8000
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"   # host:container
+    restart: always
+    volumes:
+      - .:/projectmanagement   # mount your project for live reload (changes auto-sync in container and reload)
+    depends_on:
+      - database      # ensures Postgres starts first
+
+  redis:
+    # https://medium.com/@ashishauti123/configure-celery-and-flower-with-django-e002e8847660
+    # https://python.plainenglish.io/unlock-async-email-magic-with-docker-compose-celery-flower-redis-in-django-rest-framework-drf-26d94da5ac49
+    image: redis:7
+    container_name: project_management_redis
+    restart: always
+
+  celery: # we also can configure celery-beat by creating aother containersame way. (see... above 2nd link)
+    # copied same web code in this container also. because celery needs django code to run.
+    # It needs to work as directed in that (.delay) marked function.
+    # and in one container we can run only single command. so, for celery command we created this container.
+    build: .
+    container_name: project_management_celery
+    env_file:
+      - .env
+    volumes:
+      - .:/projectmanagement  # mount your project for live reload
+    command: celery -A projectmanagement worker -l info
+    restart: always
+    depends_on:
+      - redis
+      - database
+
+  flower: # web-based monitoring tool for Celery tasks
+    build: .
+    container_name: project_management_flower
+    command: celery -A projectmanagement flower --basic_auth=admin:password123
+    volumes:
+      - .:/projectmanagement
+    ports:
+      - "5555:5555" # we exposed port to out host machine. because we will be accessing this from there.
+    depends_on:
+      - redis
+
+volumes:
+  postgres_data:
