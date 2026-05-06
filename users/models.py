@@ -28,10 +28,16 @@ class UserManager(BaseUserManager):
         return self.create_user(email, password, **extra_fields)
 
 
+class Role(models.TextChoices):
+    ADMIN = "ADMIN", "Admin"
+    USER = "USER", "User"
+
+
 # Create your models here.
 class User(AbstractUser):
     username = None
     email = models.EmailField(unique=True)  # override to make unique
+    role = models.CharField(max_length=20, choices=Role.choices, default=Role.USER)
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []

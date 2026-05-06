@@ -11,3 +11,12 @@ def send_email(subject, message, recipient_list):
         settings.EMAIL_HOST_USER,
         recipient_list,
     )
+
+
+@shared_task
+def process_upload(data):
+    """
+    check category also from product if not found create new category (check by category_name)
+    """
+
+    pass
