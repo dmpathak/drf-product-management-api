@@ -18,5 +18,6 @@ def process_upload(data):
     """
     check category also from product if not found create new category (check by category_name)
     """
+    # both categories and products should be create_or_update.
 
     pass

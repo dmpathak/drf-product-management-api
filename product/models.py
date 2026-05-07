@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Q
 
 
 class ActiveManager(models.Manager):
@@ -32,10 +33,19 @@ class Product(BaseModel):
     product_price = models.DecimalField(max_digits=10, decimal_places=2)
     currency = models.CharField(max_length=3, default="INR")
     stock_quantity = models.IntegerField()
-    sku = models.CharField(max_length=20, unique=True)
+    sku = models.CharField(max_length=20)
     image_url = models.URLField()
 
     category = models.ForeignKey('Category', on_delete=models.PROTECT, related_name='products')
 
     def __str__(self):
         return f"{self.category} - {self.product_name}"
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['sku'],
+                condition=Q(is_deleted=False),
+                name='unique_active_sku'
+            )
+        ]
