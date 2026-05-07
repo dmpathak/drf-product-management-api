@@ -26,6 +26,15 @@ class Category(BaseModel):
     def __str__(self):
         return self.category_name
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['category_name'],
+                condition=Q(is_deleted=False),
+                name='unique_category_name'
+            )
+        ]
+
 
 class Product(BaseModel):
     product_description = models.TextField()

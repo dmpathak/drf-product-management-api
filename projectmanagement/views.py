@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from projectmanagement.serializers import UploadSerializer
-from utils.tasks import process_upload
+from utils.tasks import process_bulk_upload
 
 
 class UploadView(APIView):
@@ -24,6 +24,6 @@ class UploadView(APIView):
                 status=400
             )
 
-        process_upload.delay(data)
+        process_bulk_upload.delay(data)
 
         return Response({"message": "Processing started"})
